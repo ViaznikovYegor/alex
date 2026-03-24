@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class Mood(models.Model):
@@ -122,6 +125,7 @@ class SongRelease(models.Model):
     songs = models.ForeignKey(Song, verbose_name='Песня', on_delete=models.CASCADE)
     release = models.ForeignKey(Release, verbose_name='Релиз', on_delete=models.CASCADE)
     order = models.IntegerField('Порядок', default=0)
+    disc_order = models.IntegerField('Порядок в диске', blank=True)
 
     class Meta:
         verbose_name = 'Порядок в релизе'
