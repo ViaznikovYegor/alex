@@ -27,11 +27,16 @@ class Genre(models.Model):
         return self.name
 
 
+class Cover(models.Model):
+    cover = models.ImageField('Фото артиста', upload_to='artists/')
+
+
 class Artist(models.Model):
     name = models.CharField('Имя', max_length=50)
     bio = models.TextField('Биография', blank=True)
     links = models.SlugField('Ссылки', blank=True)
     users = models.ManyToManyField(User, verbose_name='Пользователи', blank=True)
+    covers = models.ManyToManyField(Cover, verbose_name='Релизы', blank=True)
 
     class Meta:
         verbose_name = 'Исполнитель'
@@ -50,13 +55,13 @@ class Release(models.Model):
     name = models.CharField('Название', max_length=50)
     cover = models.ImageField('Обложка', upload_to='releases/')
     date = models.DateField('Дата выпуска')
-    release_type = models.CharField(
+    type = models.CharField(
         'Тип релиза',
         max_length=10,
         choices=ReleaseType.choices,
         default=ReleaseType.SINGLE,
     )
-    artists = models.ManyToManyField(Artist, verbose_name='Исполнители')
+    artists = models.ManyToManyField(Artist, verbose_name='Исполнители', blank=True)
     users = models.ManyToManyField(User, verbose_name='Пользователи', blank=True)
 
     class Meta:
@@ -64,7 +69,7 @@ class Release(models.Model):
         verbose_name_plural = 'Релизы'
 
     def __str__(self):
-        return f'{self.name} ({self.get_release_type_display()})'
+        return f'{self.name}'
 
 
 class Playlist(models.Model):
@@ -86,6 +91,8 @@ class Song(models.Model):
     listenings = models.IntegerField('Прослушиваний')
     listenings_last_week = models.IntegerField('Прослушиваний за неделю')
     path = models.SlugField('Путь к файлу')
+    disk = models.IntegerField('Номер диска', blank=True)
+    position = models.IntegerField('Позиция на диске', blank=True)
     # Связи
     moods = models.ManyToManyField(Mood, verbose_name='Настроения')
     genres = models.ManyToManyField(Genre, verbose_name='Жанры')
@@ -121,11 +128,38 @@ class LikedSong(models.Model):
         return f'{self.user} – {self.songs} ({self.is_liked})'
 
 
+class LikedArtist(models.Model):
+    artists = models.ForeignKey(Artist, verbose_name='Артист', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, verbose_name='Пользователь', on_delete=models.CASCADE)
+    is_liked = models.BooleanField('Лайк', default=True)
+
+    class Meta:
+        verbose_name = 'Лайкнутый артист'
+        verbose_name_plural = 'Лайкнутые артисты'
+        unique_together = ('artists', 'user')
+
+    def __str__(self):
+        return f'{self.user} – {self.artists} ({self.is_liked})'
+
+
+class LikedRelease(models.Model):
+    releases = models.ForeignKey(Release, verbose_name='Релиз', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, verbose_name='Пользователь', on_delete=models.CASCADE)
+    is_liked = models.BooleanField('Лайк', default=True)
+
+    class Meta:
+        verbose_name = 'Лайкнутый релиз'
+        verbose_name_plural = 'Лайкнутые релизы'
+        unique_together = ('releases', 'user')
+
+    def __str__(self):
+        return f'{self.user} – {self.releases} ({self.is_liked})'
+
+
 class SongRelease(models.Model):
     songs = models.ForeignKey(Song, verbose_name='Песня', on_delete=models.CASCADE)
     release = models.ForeignKey(Release, verbose_name='Релиз', on_delete=models.CASCADE)
     order = models.IntegerField('Порядок', default=0)
-    disc_order = models.IntegerField('Порядок в диске', blank=True)
 
     class Meta:
         verbose_name = 'Порядок в релизе'
