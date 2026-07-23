@@ -71,7 +71,6 @@ class ArtistViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
             return Response(status=status.HTTP_200_OK)
 
-        # DELETE
         LikedArtist.objects.filter(
             user=request.user,
             artists_id=pk
@@ -150,7 +149,6 @@ class ReleaseViewSet(
 
             return Response(status=status.HTTP_200_OK)
 
-        # DELETE
         LikedRelease.objects.filter(
             user=request.user,
             releases_id=pk
